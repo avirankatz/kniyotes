@@ -1,5 +1,6 @@
 
 import * as Localization from 'expo-localization';
+import * as Updates from 'expo-updates';
 import i18n from 'i18next';
 import { initReactI18next } from 'react-i18next';
 import { I18nManager } from 'react-native';
@@ -39,7 +40,7 @@ const resources = {
   },
   he: {
     translation: {
-      appTitle: 'קניות',
+      appTitle: 'קניותס',
       appSubtitle: 'קונים יחד, נשארים מסונכרנים.',
       createFamily: 'צור משפחה חדשה',
       createFamilyHint: 'קבל קוד לשיתוף',
@@ -73,9 +74,9 @@ const resources = {
 
 const deviceLocale = Localization.getLocales()[0]?.languageCode || 'en';
 const lng = deviceLocale.match(/he|iw/) ? 'he' : 'en';
-
 if (lng === 'he' && !I18nManager.isRTL) {
   I18nManager.forceRTL(true);
+  Updates.reloadAsync();
 } else if (lng !== 'he' && I18nManager.isRTL) {
   I18nManager.forceRTL(false);
 }
