@@ -1,11 +1,13 @@
 import { ThemedText } from '@/components/ThemedText';
 import { ThemedView } from '@/components/ThemedView';
+import '@/lib/i18n';
 import { getFamilyConfig, setFamilyConfig } from '@/lib/storage';
 import { getSupabase } from '@/lib/supabase';
 import { nanoid } from '@/lib/utils';
 import * as Haptics from 'expo-haptics';
 import { useRouter } from 'expo-router';
 import { useEffect, useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import { Alert, KeyboardAvoidingView, Platform, Pressable, StyleSheet, TextInput, View } from 'react-native';
 
 export default function Onboarding() {
@@ -13,11 +15,12 @@ export default function Onboarding() {
   const [mode, setMode] = useState<'choose' | 'create' | 'join'>('choose');
   const [name, setName] = useState('');
   const [code, setCode] = useState('');
+  const { t } = useTranslation();
 
   useEffect(() => {
     (async () => {
       const cfg = await getFamilyConfig();
-  if (cfg) router.replace('/list');
+      if (cfg) router.replace('/list');
     })();
   }, [router]);
 
@@ -28,7 +31,7 @@ export default function Onboarding() {
 
   const onSubmit = async () => {
     if (!name.trim()) {
-      Alert.alert('Your name', 'Please enter your name.');
+      Alert.alert(t('yourName'), t('yourName'));
       return;
     }
     let familyId = code.trim();
@@ -36,34 +39,31 @@ export default function Onboarding() {
     if (mode === 'create') {
       familyId = nanoid(6).toUpperCase();
       if (supa) {
-        // Create family and member
         const { error: famErr } = await supa.from('families').insert({ id: familyId });
         if (famErr) {
-          Alert.alert('Error', 'Could not create family.');
+          Alert.alert('Error', t('familyCode'));
           return;
         }
         const { error: memErr } = await supa.from('members').insert({ family_id: familyId, name: name.trim() });
         if (memErr) {
-          Alert.alert('Error', 'Could not add you as a member.');
+          Alert.alert('Error', t('yourName'));
           return;
         }
       }
     } else {
       if (!familyId) {
-        Alert.alert('Family code', 'Please enter a family code to join.');
+        Alert.alert(t('familyCode'), t('familyCode'));
         return;
       }
       if (supa) {
-        // Check family exists
         const { data: fam, error: famErr } = await supa.from('families').select('id').eq('id', familyId).single();
         if (famErr || !fam) {
-          Alert.alert('Not found', 'No such family code.');
+          Alert.alert('Not found', t('familyCode'));
           return;
         }
-        // Add member
         const { error: memErr } = await supa.from('members').insert({ family_id: familyId, name: name.trim() });
         if (memErr) {
-          Alert.alert('Error', 'Could not add you as a member.');
+          Alert.alert('Error', t('yourName'));
           return;
         }
       }
@@ -76,27 +76,27 @@ export default function Onboarding() {
   return (
     <KeyboardAvoidingView behavior={Platform.OS === 'ios' ? 'padding' : undefined} style={{ flex: 1 }}>
       <ThemedView style={styles.container}>
-        <ThemedText type="title" style={styles.title}>Kniyotes</ThemedText>
-        <ThemedText type="subtitle" style={styles.subtitle}>Shop together, stay in sync.</ThemedText>
+  <ThemedText type="title" style={styles.title}>{t('appTitle')}</ThemedText>
+  <ThemedText type="subtitle" style={styles.subtitle}>{t('appSubtitle')}</ThemedText>
 
         {mode === 'choose' && (
           <View style={styles.choices}>
             <Pressable onPress={() => onChoose('create')} style={({ pressed }) => [styles.cta, styles.create, pressed && styles.pressed]}>
-              <ThemedText type="defaultSemiBold" style={styles.ctaText}>Create a new family</ThemedText>
-              <ThemedText style={styles.ctaHint}>Get a code to share</ThemedText>
+              <ThemedText type="defaultSemiBold" style={styles.ctaText}>{t('createFamily')}</ThemedText>
+              <ThemedText style={styles.ctaHint}>{t('createFamilyHint')}</ThemedText>
             </Pressable>
             <Pressable onPress={() => onChoose('join')} style={({ pressed }) => [styles.cta, styles.join, pressed && styles.pressed]}>
-              <ThemedText type="defaultSemiBold" style={styles.ctaText}>Join existing</ThemedText>
-              <ThemedText style={styles.ctaHint}>Use a code from your family</ThemedText>
+              <ThemedText type="defaultSemiBold" style={styles.ctaText}>{t('joinFamily')}</ThemedText>
+              <ThemedText style={styles.ctaHint}>{t('joinFamilyHint')}</ThemedText>
             </Pressable>
           </View>
         )}
 
         {mode !== 'choose' && (
           <View style={styles.form}>
-            <ThemedText style={styles.label}>Your name</ThemedText>
+            <ThemedText style={styles.label}>{t('yourName')}</ThemedText>
             <TextInput
-              placeholder="Alex"
+              placeholder={t('namePlaceholder')}
               placeholderTextColor="#999"
               value={name}
               onChangeText={setName}
@@ -105,9 +105,9 @@ export default function Onboarding() {
             />
             {mode === 'join' && (
               <>
-                <ThemedText style={styles.label}>Family code</ThemedText>
+                <ThemedText style={styles.label}>{t('familyCode')}</ThemedText>
                 <TextInput
-                  placeholder="ABC123"
+                  placeholder={t('codePlaceholder')}
                   placeholderTextColor="#999"
                   autoCapitalize="characters"
                   value={code}
@@ -117,13 +117,13 @@ export default function Onboarding() {
               </>
             )}
             {mode === 'create' && (
-              <ThemedText style={styles.hint}>We7ll generate a short code you can share.</ThemedText>
+              <ThemedText style={styles.hint}>{t('codeGenerated')}</ThemedText>
             )}
             <Pressable onPress={onSubmit} style={({ pressed }) => [styles.primary, pressed && styles.pressed]}>
-              <ThemedText type="defaultSemiBold" style={styles.primaryText}>{mode === 'create' ? 'Create' : 'Join'}</ThemedText>
+              <ThemedText type="defaultSemiBold" style={styles.primaryText}>{mode === 'create' ? t('create') : t('join')}</ThemedText>
             </Pressable>
             <Pressable onPress={() => setMode('choose')}>
-              <ThemedText style={styles.back}>Back</ThemedText>
+              <ThemedText style={styles.back}>{t('back')}</ThemedText>
             </Pressable>
           </View>
         )}

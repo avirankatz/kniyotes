@@ -1,11 +1,13 @@
 import { ThemedText } from '@/components/ThemedText';
 import { ThemedView } from '@/components/ThemedView';
+import '@/lib/i18n';
 import { copyToClipboard, shareText } from '@/lib/invite';
 import { getFamilyConfig, removeFamilyConfig } from '@/lib/storage';
 import { useSharedList } from '@/lib/useSharedList';
 import * as Haptics from 'expo-haptics';
 import { useRouter } from 'expo-router';
 import { useEffect, useMemo, useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import { FlatList, KeyboardAvoidingView, Modal, Platform, Pressable, StyleSheet, TextInput, TouchableOpacity, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
@@ -18,27 +20,28 @@ export default function ListScreen() {
   const [text, setText] = useState('');
 
   const [inviteOpen, setInviteOpen] = useState(false);
+  const { t } = useTranslation();
   const header = useMemo(() => (
     <View style={styles.header}>
       <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' }}>
-        <ThemedText type="title">{cfg ? `Family ${cfg.familyId}` : 'Loading…'}</ThemedText>
+        <ThemedText type="title">{cfg ? `${t('family')} ${cfg.familyId}` : t('loading')}</ThemedText>
         <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
           {cfg && (
             <TouchableOpacity onPress={() => setInviteOpen(true)} style={styles.inviteBtn}>
-              <ThemedText style={styles.inviteText}>Invite</ThemedText>
+              <ThemedText style={styles.inviteText}>{t('invite')}</ThemedText>
             </TouchableOpacity>
           )}
           <TouchableOpacity onPress={async () => {
             await removeFamilyConfig();
             router.replace('/onboarding');
           }} style={styles.signOutBtn}>
-            <ThemedText style={styles.signOutText}>Sign Out</ThemedText>
+            <ThemedText style={styles.signOutText}>{t('signOut')}</ThemedText>
           </TouchableOpacity>
         </View>
       </View>
-      {cfg && <ThemedText style={{ opacity: 0.8 }}>Hi {cfg.memberName} 👋</ThemedText>}
+      {cfg && <ThemedText style={{ opacity: 0.8 }}>{t('hi')} {cfg.memberName} 👋</ThemedText>}
     </View>
-  ), [cfg]);
+  ), [cfg, t]);
 
   return (
     <SafeAreaView style={{ flex: 1 }}>
@@ -49,7 +52,7 @@ export default function ListScreen() {
             <TextInput
               value={text}
               onChangeText={setText}
-              placeholder="Add milk, bread…"
+              placeholder={t('add') + ' milk, bread…'}
               placeholderTextColor="#999"
               style={styles.input}
               onSubmitEditing={() => {
@@ -68,7 +71,7 @@ export default function ListScreen() {
               }}
               style={({ pressed }) => [styles.addBtn, pressed && styles.pressed]}
             >
-              <ThemedText type="defaultSemiBold">Add</ThemedText>
+              <ThemedText type="defaultSemiBold">{t('add')}</ThemedText>
             </Pressable>
           </View>
           <FlatList
@@ -81,7 +84,7 @@ export default function ListScreen() {
                 <ThemedText type="defaultSemiBold" style={[styles.itemText, item.done && styles.itemDoneText]}>
                   {item.title}
                 </ThemedText>
-                <ThemedText style={styles.meta}>by {item.addedBy}</ThemedText>
+                <ThemedText style={styles.meta}>{t('by')} {item.addedBy}</ThemedText>
               </Pressable>
             )}
           />
@@ -89,19 +92,19 @@ export default function ListScreen() {
           <Modal visible={inviteOpen} animationType="slide" transparent onRequestClose={() => setInviteOpen(false)}>
             <View style={styles.modalBg}>
               <View style={styles.modalCard}>
-                <ThemedText type="title">Invite to Family</ThemedText>
-                <ThemedText style={styles.codeLabel}>Family Code:</ThemedText>
+                <ThemedText type="title">{t('inviteTitle')}</ThemedText>
+                <ThemedText style={styles.codeLabel}>{t('familyCodeLabel')}</ThemedText>
                 <ThemedText selectable style={styles.code}>{cfg?.familyId}</ThemedText>
                 <View style={styles.inviteRow}>
                   <TouchableOpacity style={styles.inviteAction} onPress={async () => { if (cfg) { await copyToClipboard(cfg.familyId); Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success); }}}>
-                    <ThemedText>Copy</ThemedText>
+                    <ThemedText>{t('copy')}</ThemedText>
                   </TouchableOpacity>
                   <TouchableOpacity style={styles.inviteAction} onPress={async () => { if (cfg) { await shareText(`Join my family on Kniyotes! Code: ${cfg.familyId}`); Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success); }}}>
-                    <ThemedText>Share</ThemedText>
+                    <ThemedText>{t('share')}</ThemedText>
                   </TouchableOpacity>
                 </View>
                 <TouchableOpacity onPress={() => setInviteOpen(false)} style={styles.closeBtn}>
-                  <ThemedText style={styles.closeText}>Close</ThemedText>
+                  <ThemedText style={styles.closeText}>{t('close')}</ThemedText>
                 </TouchableOpacity>
               </View>
             </View>
