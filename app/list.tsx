@@ -10,6 +10,27 @@ import { PropsWithChildren, useEffect, useMemo, useRef, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Animated, Easing, FlatList, KeyboardAvoidingView, LayoutAnimation, Modal, Platform, Pressable, StyleSheet, TextInput, UIManager, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
+import Svg, { Circle, Ellipse, Path, Rect } from 'react-native-svg';
+// Friendly SVG illustration: a shopping basket with a smile
+const BasketSVG = ({ style }: { style?: any }) => (
+  <Svg width={160} height={160} viewBox="0 0 160 160" style={style}>
+    {/* Basket base */}
+    <Rect x="32" y="90" width="96" height="36" rx="16" fill="#FFD166" stroke="#E0A800" strokeWidth="3" />
+    {/* Basket handle */}
+    <Path d="M48 90 Q80 40 112 90" stroke="#E0A800" strokeWidth="5" fill="none" />
+    {/* Basket lines */}
+    <Path d="M56 90 L56 126" stroke="#E0A800" strokeWidth="2.5" />
+    <Path d="M80 90 L80 126" stroke="#E0A800" strokeWidth="2.5" />
+    <Path d="M104 90 L104 126" stroke="#E0A800" strokeWidth="2.5" />
+    {/* Smile */}
+    <Path d="M65 115 Q80 130 95 115" stroke="#8BC34A" strokeWidth="3" fill="none" strokeLinecap="round" />
+    {/* Eyes */}
+    <Circle cx="70" cy="108" r="3" fill="#8BC34A" />
+    <Circle cx="90" cy="108" r="3" fill="#8BC34A" />
+    {/* Shadow */}
+    <Ellipse cx="80" cy="140" rx="32" ry="7" fill="#E0E0E0" opacity="0.5" />
+  </Svg>
+);
 
 type ListItem = { id: string; title: string; done: boolean; addedBy: string };
 
@@ -109,6 +130,36 @@ const ItemRow = ({ item, onToggle, onRemove }: { item: ListItem; onToggle: () =>
   );
 };
 
+// Empty state with a gentle floating animation
+const EmptyState = () => {
+  const float = useRef(new Animated.Value(0)).current;
+
+  useEffect(() => {
+    const loop = Animated.loop(
+      Animated.sequence([
+        Animated.timing(float, { toValue: 1, duration: 1800, easing: Easing.inOut(Easing.sin), useNativeDriver: true }),
+        Animated.timing(float, { toValue: 0, duration: 1800, easing: Easing.inOut(Easing.sin), useNativeDriver: true }),
+      ])
+    );
+    loop.start();
+    return () => loop.stop();
+  }, [float]);
+
+  const translateY = float.interpolate({ inputRange: [0, 1], outputRange: [0, -10] });
+  const rotate = float.interpolate({ inputRange: [0, 1], outputRange: ['0deg', '6deg'] });
+
+  const { t } = useTranslation();
+  return (
+    <View style={styles.emptyWrap}>
+      <Animated.View style={[styles.emptyImg, { transform: [{ translateY }, { rotate }] }]}> 
+        <BasketSVG />
+      </Animated.View>
+      <ThemedText type="title" style={styles.emptyTitle}>{t('emptyTitle', 'No items yet')}</ThemedText>
+      <ThemedText style={styles.emptySub}>{t('emptySub', 'Add milk, bread, or anything you need')}</ThemedText>
+    </View>
+  );
+};
+
 export default function ListScreen() {
   const router = useRouter();
   const [cfg, setCfg] = useState<{ familyId: string; memberName: string } | null>(null);
@@ -186,8 +237,9 @@ export default function ListScreen() {
           <FlatList
             data={items}
             keyExtractor={(it) => it.id}
-            contentContainerStyle={{ paddingBottom: 60 }}
+            contentContainerStyle={{ paddingBottom: 60, ...(items.length === 0 ? { flexGrow: 1, justifyContent: 'center' } : {}) }}
             ItemSeparatorComponent={() => <View style={{ height: 10 }} />}
+            ListEmptyComponent={<EmptyState />}
             renderItem={({ item }) => (
               <ItemRow
                 item={item as ListItem}
@@ -247,4 +299,8 @@ const styles = StyleSheet.create({
   itemText: { fontSize: 16 },
   itemDoneText: { textDecorationLine: 'line-through', opacity: 0.7 },
   meta: { opacity: 0.7, marginTop: 4, fontSize: 12 },
+  emptyWrap: { alignItems: 'center', paddingHorizontal: 16 },
+  emptyImg: { width: 160, height: 160, opacity: 0.9, marginBottom: 4 },
+  emptyTitle: { marginTop: 8 },
+  emptySub: { opacity: 0.8, marginTop: 4, textAlign: 'center' },
 });
