@@ -1,5 +1,6 @@
 import { ThemedText } from '@/components/ThemedText';
 import { ThemedView } from '@/components/ThemedView';
+import { IconAdd, IconClose, IconCopy, IconInvite, IconShare, IconSignOut } from '@/components/ui/Icons';
 import '@/lib/i18n';
 import { copyToClipboard, shareText } from '@/lib/invite';
 import { getFamilyConfig, removeFamilyConfig } from '@/lib/storage';
@@ -44,7 +45,15 @@ const springLayout = () => {
 };
 
 // Reusable pressable with bouncy scale on press
-const BouncyButton = ({ children, style, onPress, onLongPress, disabled }: PropsWithChildren<{ style?: any; onPress?: () => void; onLongPress?: () => void; disabled?: boolean }>) => {
+type BouncyButtonProps = PropsWithChildren<{
+  style?: any;
+  onPress?: () => void;
+  onLongPress?: () => void;
+  disabled?: boolean;
+  accessibilityLabel?: string;
+}>;
+
+const BouncyButton = ({ children, style, onPress, onLongPress, disabled, accessibilityLabel }: BouncyButtonProps) => {
   const scale = useRef(new Animated.Value(1)).current;
   const to = (v: number) => Animated.spring(scale, { toValue: v, useNativeDriver: true, speed: 30, bounciness: 6 }).start();
   return (
@@ -54,9 +63,10 @@ const BouncyButton = ({ children, style, onPress, onLongPress, disabled }: Props
       onPress={onPress}
       onLongPress={onLongPress}
       disabled={disabled}
+      accessibilityLabel={accessibilityLabel}
     >
       {({ pressed }) => (
-        <Animated.View style={[style, pressed && styles.pressed, { transform: [{ scale }] }]}>
+        <Animated.View style={[style, pressed && styles.pressed, { transform: [{ scale }] }]}> 
           {children}
         </Animated.View>
       )}
@@ -182,8 +192,12 @@ export default function ListScreen() {
         <ThemedText type="title">{cfg ? `${t('family')} ${cfg.familyId}` : t('loading')}</ThemedText>
         <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
           {cfg && (
-            <BouncyButton onPress={() => setInviteOpen(true)} style={styles.inviteBtn}>
-              <ThemedText style={styles.inviteText}>{t('invite')}</ThemedText>
+            <BouncyButton
+              onPress={() => setInviteOpen(true)}
+              style={styles.inviteBtn}
+              accessibilityLabel={t('invite')}
+            >
+              <IconInvite size={24} color="#222" />
             </BouncyButton>
           )}
           <BouncyButton
@@ -192,8 +206,9 @@ export default function ListScreen() {
               router.replace('/onboarding');
             }}
             style={styles.signOutBtn}
+            accessibilityLabel={t('signOut')}
           >
-            <ThemedText style={styles.signOutText}>{t('signOut')}</ThemedText>
+            <IconSignOut size={24} color="#d32f2f" />
           </BouncyButton>
         </View>
       </View>
@@ -206,7 +221,7 @@ export default function ListScreen() {
       <KeyboardAvoidingView behavior={Platform.OS === 'ios' ? 'padding' : undefined} style={{ flex: 1 }}>
         <ThemedView style={styles.container}>
           {header}
-          <View style={styles.row}>
+          <View style={[styles.row,styles.alignCenter]}>
             <TextInput
               value={text}
               onChangeText={setText}
@@ -230,8 +245,9 @@ export default function ListScreen() {
                 Haptics.selectionAsync();
               }}
               style={styles.addBtn}
+              accessibilityLabel={t('add')}
             >
-              <ThemedText type="defaultSemiBold">{t('add')}</ThemedText>
+              <IconAdd size={28} color="#1565c0" />
             </BouncyButton>
           </View>
           <FlatList
@@ -256,15 +272,23 @@ export default function ListScreen() {
                 <ThemedText style={styles.codeLabel}>{t('familyCodeLabel')}</ThemedText>
                 <ThemedText selectable style={styles.code}>{cfg?.familyId}</ThemedText>
                 <View style={styles.inviteRow}>
-                  <BouncyButton style={styles.inviteAction} onPress={async () => { if (cfg) { await copyToClipboard(cfg.familyId); Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success); }}}>
-                    <ThemedText>{t('copy')}</ThemedText>
+                  <BouncyButton
+                    style={styles.inviteAction}
+                    onPress={async () => { if (cfg) { await copyToClipboard(cfg.familyId); Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success); }}}
+                    accessibilityLabel={t('copy')}
+                  >
+                    <IconCopy size={22} color="#222" />
                   </BouncyButton>
-                  <BouncyButton style={styles.inviteAction} onPress={async () => { if (cfg) { await shareText(`Join my family on Kniyotes! Code: ${cfg.familyId}`); Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success); }}}>
-                    <ThemedText>{t('share')}</ThemedText>
+                  <BouncyButton
+                    style={styles.inviteAction}
+                    onPress={async () => { if (cfg) { await shareText(`Join my family on Kniyotes! Code: ${cfg.familyId}`); Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success); }}}
+                    accessibilityLabel={t('share')}
+                  >
+                    <IconShare size={22} color="#222" />
                   </BouncyButton>
                 </View>
-                <BouncyButton onPress={() => setInviteOpen(false)} style={styles.closeBtn}>
-                  <ThemedText style={styles.closeText}>{t('close')}</ThemedText>
+                <BouncyButton onPress={() => setInviteOpen(false)} style={styles.closeBtn} accessibilityLabel={t('close')}>
+                  <IconClose size={22} color="#222" />
                 </BouncyButton>
               </View>
             </View>
@@ -291,6 +315,8 @@ const styles = StyleSheet.create({
   closeBtn: { marginTop: 10 },
   closeText: { textDecorationLine: 'underline', opacity: 0.7 },
   row: { flexDirection: 'row', gap: 8 },
+  alignCenter: { alignItems: 'center' },
+  justifyCenter: { justifyContent: 'center' },
   input: { flex: 1, backgroundColor: 'rgba(0,0,0,0.05)', padding: 14, borderRadius: 14 },
   addBtn: { paddingHorizontal: 16, borderRadius: 14, backgroundColor: '#90CAF9', alignItems: 'center', justifyContent: 'center' },
   pressed: { opacity: 0.85 },

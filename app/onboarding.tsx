@@ -76,8 +76,8 @@ export default function Onboarding() {
   return (
     <KeyboardAvoidingView behavior={Platform.OS === 'ios' ? 'padding' : undefined} style={{ flex: 1 }}>
       <ThemedView style={styles.container}>
-  <ThemedText type="title" style={styles.title}>{t('appTitle')}</ThemedText>
-  <ThemedText type="subtitle" style={styles.subtitle}>{t('appSubtitle')}</ThemedText>
+      <ThemedText type="title" style={styles.title}>{t('appTitle')}</ThemedText>
+      <ThemedText type="subtitle" style={styles.subtitle}>{t('appSubtitle')}</ThemedText>
 
         {mode === 'choose' && (
           <View style={styles.choices}>
@@ -134,7 +134,7 @@ export default function Onboarding() {
 
 const styles = StyleSheet.create({
   container: { flex: 1, alignItems: 'center', justifyContent: 'center', padding: 24, gap: 24 },
-  title: { fontSize: 42 },
+  title: { fontSize: 42,lineHeight: 42 },
   subtitle: { opacity: 0.8 },
   choices: { width: '100%', gap: 14 },
   cta: { padding: 18, borderRadius: 18 },
