@@ -6,9 +6,9 @@ import { getSupabase } from '@/lib/supabase';
 import { nanoid } from '@/lib/utils';
 import * as Haptics from 'expo-haptics';
 import { useRouter } from 'expo-router';
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { useTranslation } from 'react-i18next';
-import { Alert, KeyboardAvoidingView, Platform, Pressable, StyleSheet, TextInput, View } from 'react-native';
+import { Alert, Animated, KeyboardAvoidingView, Platform, Pressable, StyleSheet, TextInput, View } from 'react-native';
 
 export default function Onboarding() {
   const router = useRouter();
@@ -16,6 +16,18 @@ export default function Onboarding() {
   const [name, setName] = useState('');
   const [code, setCode] = useState('');
   const { t } = useTranslation();
+  const logo = require('../assets/images/avatar.png');
+  const bob = useRef(new Animated.Value(0)).current;
+
+  useEffect(() => {
+    // subtle up/down bob for the logo
+    Animated.loop(
+      Animated.sequence([
+        Animated.timing(bob, { toValue: -6, duration: 1300, useNativeDriver: true }),
+        Animated.timing(bob, { toValue: 0, duration: 1300, useNativeDriver: true }),
+      ])
+    ).start();
+  }, [bob]);
 
   useEffect(() => {
     (async () => {
@@ -76,8 +88,9 @@ export default function Onboarding() {
   return (
     <KeyboardAvoidingView behavior={Platform.OS === 'ios' ? 'padding' : undefined} style={{ flex: 1 }}>
       <ThemedView style={styles.container}>
-      <ThemedText type="title" style={styles.title}>{t('appTitle')}</ThemedText>
-      <ThemedText type="subtitle" style={styles.subtitle}>{t('appSubtitle')}</ThemedText>
+        <Animated.Image source={logo} style={[styles.logo, { transform: [{ translateY: bob }] }]} resizeMode="cover" />
+        <ThemedText type="title" style={styles.title}>{t('appTitle')}</ThemedText>
+        <ThemedText type="subtitle" style={styles.subtitle}>{t('appSubtitle')}</ThemedText>
 
         {mode === 'choose' && (
           <View style={styles.choices}>
@@ -127,6 +140,11 @@ export default function Onboarding() {
             </Pressable>
           </View>
         )}
+        {/* decorative bubbles */}
+        <View pointerEvents="none" style={styles.bubbleWrap}>
+          <View style={[styles.bubble, styles.bubbleLeft]} />
+          <View style={[styles.bubble, styles.bubbleRight]} />
+        </View>
       </ThemedView>
     </KeyboardAvoidingView>
   );
@@ -150,4 +168,9 @@ const styles = StyleSheet.create({
   primary: { backgroundColor: '#ffd166', padding: 16, borderRadius: 16, alignItems: 'center', marginTop: 4 },
   primaryText: { fontSize: 18 },
   back: { textAlign: 'center', marginTop: 10, textDecorationLine: 'underline', opacity: 0.8 },
+  logo: { width: 120, height: 120, marginBottom: 6 },
+  bubbleWrap: { position: 'absolute', top: 40, left: 0, right: 0, height: 220, overflow: 'hidden' },
+  bubble: { position: 'absolute', width: 160, height: 160, borderRadius: 160, opacity: 0.12, transform: [{ scale: 1.1 }] },
+  bubbleLeft: { left: -40, top: 0, backgroundColor: '#8bf18b' },
+  bubbleRight: { right: -30, top: 40, backgroundColor: '#8bdcf1' },
 });
